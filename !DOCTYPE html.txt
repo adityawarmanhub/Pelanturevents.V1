@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PELANTUR: Rookie Trail Series Vol. 1</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Marked.js for Markdown Parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            orange: '#E76F51', 
+                            green: '#2A9D8F',
+                            dark: '#264653',
+                            sand: '#F4F1DE',
+                            yellow: '#E9C46A'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        display: ['Bebas Neue', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #F4F1DE; scroll-behavior: smooth; }
+        
+        /* Animation Classes */
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease-out; }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #F4F1DE; }
+        ::-webkit-scrollbar-thumb { background: #2A9D8F; border-radius: 10px; }
+
+        .hero-bg {
+            /* REVISI: Menggunakan URL Gambar Kelompok Trail Runner di Hutan */
+            background-image: linear-gradient(rgba(38, 70, 83, 0.6), rgba(38, 70, 83, 0.8)), url('https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?q=80&w=2074&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            /* Efek Hitam Putih (Grayscale) tetap dipertahankan agar konsisten */
+            filter: grayscale(100%); 
+        }
+
+        /* Modal Transitions */
+        .modal { transition: opacity 0.3s ease-in-out, visibility 0.3s; }
+        .modal-content { transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .modal.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .modal.hidden .modal-content { transform: scale(0.9); }
+
+        /* AI Chat Widget Styles */
+        .chat-widget {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .chat-window {
+            width: 350px;
+            height: 500px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin-bottom: 20px;
+            transform-origin: bottom right;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .chat-window.closed {
+            opacity: 0;
+            transform: scale(0.8) translateY(20px);
+            pointer-events: none;
+            height: 0; 
+        }
+
+        .chat-header {
+            background: var(--primary); /* Fallback */
+            background: #264653;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .message.bot {
+            background: white;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            border: 1px solid #eee;
+            color: #333;
+        }
+        
+        /* Markdown Styles inside bot message */
+        .message.bot ul { list-style-type: disc; margin-left: 20px; margin-top: 5px; }
+        .message.bot strong { color: #E76F51; }
+
+        .message.user {
+            background: #E76F51;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+
+        .chat-input-area {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            border: 1px solid #ddd;
+            padding: 10px 15px;
+            border-radius: 25px;
+            outline: none;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .chat-input:focus { border-color: #E76F51; }
+
+        .chat-toggle-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #E76F51;
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(231, 111, 81, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            transition: transform 0.2s;
+        }
+
+        .chat-toggle-btn:hover { transform: scale(1.1) rotate(-10deg); }
+        
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 5px 0;
+        }
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #ccc;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+    </style>
+</head>
+<body class="text-brand-dark antialiased overflow-x-hidden">
+
+    <!-- NAV -->
+    <nav class="fixed w-full z-40 px-6 py-4 flex justify-between items-center bg-brand-dark/90 backdrop-blur-sm text-white border-b border-white/10 shadow-lg">
+        <div class="font-display text-2xl tracking-wider text-brand-orange">PELANTUR</div>
+        <div class="flex gap-3">
+             <button onclick="toggleChat()" class="text-xs md:text-sm font-bold border border-white/20 text-white px-4 py-2 rounded-full hover:bg-white/10 transition-colors hidden md:block">
+                ✨ TANYA COACH AI
+            </button>
+            <button onclick="document.getElementById('modal-register').classList.remove('hidden')" class="text-xs md:text-sm font-bold bg-white text-brand-dark px-4 py-2 rounded-full hover:bg-brand-orange hover:text-white transition-colors">
+                DAFTAR SEKARANG
+            </button>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <header class="hero-bg h-screen flex flex-col justify-center items-center text-center px-4 relative">
+        <div class="reveal active delay-100">
+            <p class="text-brand-yellow font-bold tracking-[0.3em] mb-4 text-xs md:text-sm uppercase">Minggu Pagi • Sentul Area</p>
+            <h1 class="font-display text-7xl md:text-9xl text-white leading-[0.9] drop-shadow-xl">ROOKIE<br><span class="text-brand-orange">TRAIL SERIES</span></h1>
+            <p class="font-display text-3xl md:text-5xl text-white/90 mt-2 tracking-wide">VOL. 1: THE PANIISAN LOOP</p>
+            
+            <div class="mt-8 flex flex-col items-center gap-4">
+                <p class="text-white font-medium max-w-lg mx-auto text-sm md:text-lg bg-black/20 backdrop-blur-md p-4 rounded-xl border border-white/10">
+                    "Aspal itu keras, Tanah itu nyaman. <br>Lari santai, pulang bawa teman."
+                </p>
+                <div class="animate-bounce mt-10 cursor-pointer" onclick="document.getElementById('intro-section').scrollIntoView()">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- INTRO / PROBLEM -->
+    <section id="intro-section" class="py-24 px-6 max-w-6xl mx-auto">
+        <div class="grid md:grid-cols-2 gap-16 items-center">
+            <div class="reveal">
+                <h2 class="font-display text-5xl md:text-7xl text-brand-dark mb-6 leading-none">JAKARTA ITU <br><span class="text-brand-orange underline decoration-wavy decoration-2">TOXIC.</span></h2>
+                <p class="text-lg text-gray-600 mb-6 leading-relaxed">
+                    Macet, klakson, polusi. Lari di aspal panas kadang bikin makin stress. Jiwa lo butuh <i>reset button</i>.
+                </p>
+                <div class="bg-white p-6 rounded-2xl shadow-xl border-l-8 border-brand-green">
+                    <p class="text-lg font-bold text-brand-dark mb-2">👋 Kenalin, PELANTUR.</p>
+                    <p class="text-gray-600 text-sm">"Pelari Naik Turun" atau "Pelan Tapi Terukur". Komunitas buat lo yang mau nyoba lari di tanah tanpa takut ditinggal.</p>
+                </div>
+                <!-- AI Feature Teaser -->
+                <div class="mt-6 p-4 bg-brand-sand rounded-xl border border-brand-orange/20 flex items-center gap-4 cursor-pointer hover:bg-brand-orange/10 transition-colors" onclick="toggleChat()">
+                    <div class="bg-brand-orange text-white w-10 h-10 rounded-full flex items-center justify-center text-xl">🤖</div>
+                    <div>
+                        <p class="font-bold text-brand-dark text-sm">Masih Ragu?</p>
+                        <p class="text-xs text-gray-500">Tanya Coach AI kita tentang persiapan & gear!</p>
+                    </div>
+                </div>
+            </div>
+            <div class="reveal relative group">
+                <div class="absolute -inset-4 bg-brand-orange/20 rounded-[3rem] transform rotate-3 z-0 group-hover:rotate-6 transition-transform"></div>
+                <!-- Gambar: Sepatu Trail di Tanah -->
+                <img src="https://images.unsplash.com/photo-1541625902209-66c3db269992?q=80&w=2070&auto=format&fit=crop" alt="Trail Shoes Dirty" class="relative z-10 rounded-[2.5rem] shadow-2xl w-full h-[450px] object-cover grayscale hover:grayscale-0 transition-all duration-500">
+            </div>
+        </div>
+    </section>
+
+    <!-- THE JOURNEY (VISUAL TIMELINE) -->
+    <section class="py-24 bg-brand-dark text-brand-sand relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-96 h-96 bg-brand-green rounded-full blur-[150px] opacity-20"></div>
+        <div class="absolute bottom-0 right-0 w-96 h-96 bg-brand-orange rounded-full blur-[150px] opacity-20"></div>
+
+        <div class="container mx-auto px-6 relative z-10">
+            <h2 class="font-display text-center text-6xl mb-4">THE MISSION <span class="text-brand-green">VOL. 1</span></h2>
+            <p class="text-center text-white/60 mb-20 max-w-2xl mx-auto">Rute Paniisan didesain khusus buat pemula. Ada tanjakan buat bakar kalori, ada sungai buat healing.</p>
+
+            <!-- Stage 1 -->
+            <div class="flex flex-col md:flex-row items-center gap-10 mb-24 reveal group">
+                <div class="md:w-1/2 order-2 md:order-1 overflow-hidden rounded-3xl relative">
+                    <!-- REVISI: Gambar Orang Lari di Tanjakan Hutan (URL Baru) -->
+                    <img src="https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=2070&auto=format&fit=crop" alt="Trail Runner Uphill in Forest" class="group-hover:scale-110 transition-transform duration-700 w-full h-[350px] object-cover">
+                    <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-all"></div>
+                </div>
+                <div class="md:w-1/2 order-1 md:order-2 md:pl-10">
+                    <span class="bg-brand-orange text-white text-xs font-bold px-4 py-1 rounded-full mb-4 inline-block tracking-wider">07:00 WIB</span>
+                    <h3 class="font-display text-5xl mb-4">THE CLIMB</h3>
+                    <p class="text-white/70 text-lg leading-relaxed">
+                        Start dari Wangun. Kita nanjak santai lewat punggungan bukit. Leader bakal atur pace "jalan-lari". <br><b class="text-brand-yellow">Filosofi:</b> Kalau nanjak, kita jalan. Jangan maksa!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Stage 2 -->
+            <div class="flex flex-col md:flex-row items-center gap-10 mb-24 reveal group">
+                <div class="md:w-1/2 order-1 md:pr-10 text-right md:text-left">
+                     <div class="md:text-right">
+                        <span class="bg-brand-green text-white text-xs font-bold px-4 py-1 rounded-full mb-4 inline-block tracking-wider">08:30 WIB</span>
+                        <h3 class="font-display text-5xl mb-4">WARUNG MOMENT</h3>
+                        <p class="text-white/70 text-lg leading-relaxed">
+                            Check point di Puncak Paniisan. Kita stop buat makan gorengan, minum teh manis, dan foto-foto. Ini momen wajib buat bonding!
+                        </p>
+                     </div>
+                </div>
+                <div class="md:w-1/2 order-2 overflow-hidden rounded-3xl">
+                    <!-- REVISI: Gambar Orang Berkumpul/Makan Bareng (URL Baru yang Relevan) -->
+                    <img src="https://images.unsplash.com/photo-1533240332313-0db49b459ad6?q=80&w=2070&auto=format&fit=crop" alt="Group Resting and Eating together in nature" class="group-hover:scale-110 transition-transform duration-700 w-full h-[350px] object-cover">
+                </div>
+            </div>
+
+            <!-- Stage 3 -->
+            <div class="flex flex-col md:flex-row items-center gap-10 reveal group">
+                <div class="md:w-1/2 order-2 md:order-1 overflow-hidden rounded-3xl">
+                    <!-- Gambar: Sungai/River Trek -->
+                    <img src="https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?q=80&w=2070&auto=format&fit=crop" alt="River Crossing" class="group-hover:scale-110 transition-transform duration-700 w-full h-[350px] object-cover">
+                </div>
+                <div class="md:w-1/2 order-1 md:order-2 md:pl-10">
+                    <span class="bg-blue-500 text-white text-xs font-bold px-4 py-1 rounded-full mb-4 inline-block tracking-wider">09:15 WIB</span>
+                    <h3 class="font-display text-5xl mb-4">RIVER TREK</h3>
+                    <p class="text-white/70 text-lg leading-relaxed">
+                        Jalan pulang lewat lembah sungai. Airnya jernih, batunya estetik. Siap-siap basah dikit, ini bagian paling seru buat konten Instagram!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- EDUCATION SECTION (Shoe Tying Image) -->
+    <section class="py-24 bg-brand-sand">
+        <div class="container mx-auto px-6">
+            <div class="bg-white rounded-[3rem] p-8 md:p-12 shadow-2xl flex flex-col md:flex-row items-center gap-12 reveal border-b-8 border-brand-orange">
+                
+                <!-- Gambar: Mengikat Tali Sepatu -->
+                <div class="md:w-1/2 relative">
+                    <div class="absolute inset-0 bg-brand-dark rounded-3xl transform translate-x-3 translate-y-3"></div>
+                    <!-- REVISI: Mengganti URL gambar mengikat sepatu dengan yang lebih stabil -->
+                    <img src="https://images.unsplash.com/photo-1551853489-f30b92f7d295?q=80&w=2070&auto=format&fit=crop" alt="Mengikat Tali Sepatu Trail" class="relative rounded-3xl shadow-lg w-full h-[400px] object-cover z-10 filter sepia-[.3]">
+                    
+                    <div class="absolute bottom-6 left-6 bg-white/90 backdrop-blur px-6 py-4 rounded-xl z-20 shadow-lg border border-gray-200">
+                        <p class="font-display text-2xl text-brand-orange">ROOKIE CLINIC</p>
+                        <p class="text-xs text-gray-500 font-bold uppercase">Basic Skill Included</p>
+                    </div>
+                </div>
+
+                <div class="md:w-1/2">
+                    <h2 class="font-display text-6xl text-brand-dark mb-6">BUKAN CUMA LARI.</h2>
+                    <p class="text-gray-600 mb-8 text-lg">
+                        Kita sebut ini "Kelas Lapangan". Captain PELANTUR bakal ajarin teknik dasar biar lo aman di hutan.
+                    </p>
+                    <div class="space-y-6">
+                        <div class="flex gap-4">
+                            <div class="w-12 h-12 bg-brand-green/10 rounded-full flex items-center justify-center text-2xl">👟</div>
+                            <div>
+                                <h4 class="font-bold text-brand-dark text-xl">Double Knot Technique</h4>
+                                <p class="text-sm text-gray-500">Biar tali sepatu gak nyangkut akar.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-12 h-12 bg-brand-orange/10 rounded-full flex items-center justify-center text-2xl">👣</div>
+                            <div>
+                                <h4 class="font-bold text-brand-dark text-xl">River Crossing 101</h4>
+                                <p class="text-sm text-gray-500">Cara napak di batu licin biar gak kepleset.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- INTERACTIVE DETAILS GRID (POP-UPS) -->
+    <section class="py-24 px-6 max-w-7xl mx-auto">
+        <div class="text-center mb-16 reveal">
+            <h2 class="font-display text-6xl text-brand-dark">MISSION DETAILS</h2>
+            <p class="text-gray-500 mt-4">Klik kartu di bawah buat liat detail lengkapnya.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 reveal">
+            <!-- Card 1: Rundown -->
+            <button onclick="openModal('modal-rundown')" class="group bg-white p-10 rounded-[2rem] shadow-xl hover:-translate-y-3 transition-all duration-300 text-left border border-gray-100 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-brand-green/10 rounded-bl-[100px] -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+                <div class="text-5xl mb-6">⏱️</div>
+                <h3 class="font-display text-3xl mb-2 text-brand-dark">FULL RUNDOWN</h3>
+                <p class="text-sm text-gray-500 font-sans">Dari kumpul di Jakarta sampe pulang.</p>
+                <div class="mt-8 text-brand-green font-bold text-sm flex items-center gap-2">
+                    LIHAT JADWAL <span class="group-hover:translate-x-2 transition-transform">→</span>
+                </div>
+            </button>
+
+             <!-- Card 2: Gear List -->
+             <button onclick="openModal('modal-gear')" class="group bg-white p-10 rounded-[2rem] shadow-xl hover:-translate-y-3 transition-all duration-300 text-left border border-gray-100 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-brand-orange/10 rounded-bl-[100px] -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+                <div class="text-5xl mb-6">🎒</div>
+                <h3 class="font-display text-3xl mb-2 text-brand-dark">GEAR WAJIB</h3>
+                <p class="text-sm text-gray-500 font-sans">Gak punya sepatu trail? Cek dulu di sini.</p>
+                <div class="mt-8 text-brand-orange font-bold text-sm flex items-center gap-2">
+                    CEK CHECKLIST <span class="group-hover:translate-x-2 transition-transform">→</span>
+                </div>
+            </button>
+
+             <!-- Card 3: Cost -->
+             <button onclick="openModal('modal-cost')" class="group bg-white p-10 rounded-[2rem] shadow-xl hover:-translate-y-3 transition-all duration-300 text-left border border-gray-100 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-brand-yellow/20 rounded-bl-[100px] -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+                <div class="text-5xl mb-6">💰</div>
+                <h3 class="font-display text-3xl mb-2 text-brand-dark">BIAYA (PATUNGAN)</h3>
+                <p class="text-sm text-gray-500 font-sans">Transparan. Share cost bensin & tol.</p>
+                <div class="mt-8 text-brand-dark font-bold text-sm flex items-center gap-2">
+                    RINCIAN BIAYA <span class="group-hover:translate-x-2 transition-transform">→</span>
+                </div>
+            </button>
+        </div>
+    </section>
+
+    <!-- CTA FOOTER -->
+    <section class="bg-brand-dark py-24 px-6 text-center text-white relative overflow-hidden">
+        <!-- Background Pattern -->
+        <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#E76F51 1px, transparent 1px); background-size: 30px 30px;"></div>
+        
+        <div class="relative z-10 reveal">
+            <h2 class="font-display text-6xl md:text-8xl mb-6">SIAP KOTOR?</h2>
+            <p class="text-xl md:text-2xl font-light mb-12 max-w-2xl mx-auto opacity-80">
+                Slot terbatas cuma buat 15 orang. <br>
+                <span class="text-brand-orange font-bold">No Drop Policy. Everyone is Welcome.</span>
+            </p>
+            <button onclick="document.getElementById('modal-register').classList.remove('hidden')" class="bg-brand-orange text-white text-xl md:text-2xl font-bold py-6 px-12 rounded-full hover:scale-105 hover:bg-white hover:text-brand-orange transition-all shadow-[0_20px_50px_rgba(231,111,81,0.5)]">
+                AMANKAN SLOT LO →
+            </button>
+            <p class="mt-16 text-sm opacity-40 font-mono">© 2024 PELANTUR COMMUNITY. Pelan Tapi Terukur.</p>
+        </div>
+    </section>
+
+    <!-- GEMINI AI CHAT WIDGET -->
+    <div class="chat-widget">
+        <div id="chat-window" class="chat-window closed">
+            <div class="chat-header">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🤖</span>
+                    <div>
+                        <p class="font-bold text-sm">Coach PELANTUR AI</p>
+                        <p class="text-xs opacity-80 text-brand-orange font-bold">Powered by Gemini ✨</p>
+                    </div>
+                </div>
+                <button onclick="toggleChat()" class="text-white hover:text-brand-orange">✕</button>
+            </div>
+            
+            <div id="chat-messages" class="chat-messages">
+                <!-- Welcome Message -->
+                <div class="message bot">
+                    Halo Rookies! 👋 Gue Coach AI PELANTUR. <br><br>
+                    Bingung soal gear? Takut gak kuat nanjak? Atau butuh pantun buat caption lari? <br><br>
+                    Tanya aja di sini, santuy!
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" id="user-input" class="chat-input" placeholder="Tanya sesuatu..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()" class="bg-brand-dark text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-brand-orange transition-colors">
+                    ➤
+                </button>
+            </div>
+        </div>
+
+        <button onclick="toggleChat()" class="chat-toggle-btn">
+            💬
+        </button>
+    </div>
+
+
+    <!-- MODALS (POP-UPS) -->
+    
+    <!-- Modal 1: Rundown -->
+    <div id="modal-rundown" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="closeModal(event, 'modal-rundown')">
+        <div class="modal-content bg-white w-full max-w-md rounded-3xl p-8 relative shadow-2xl overflow-y-auto max-h-[90vh]">
+            <button onclick="document.getElementById('modal-rundown').classList.add('hidden')" class="absolute top-4 right-4 bg-gray-100 p-2 rounded-full hover:bg-gray-200">✕</button>
+            <h3 class="font-display text-4xl text-brand-dark mb-6">JADWAL LENGKAP</h3>
+            <ul class="space-y-6 relative border-l-2 border-gray-200 ml-3">
+                <li class="pl-6 relative">
+                    <div class="absolute -left-[9px] top-1 w-4 h-4 bg-brand-dark rounded-full"></div>
+                    <span class="font-bold text-brand-orange">05:00 WIB</span>
+                    <p class="font-bold">Tikum Jakarta</p>
+                    <p class="text-sm text-gray-500">Lokasi: Cawang UKI / FX Sudirman (Carpooling).</p>
+                </li>
+                <li class="pl-6 relative">
+                    <div class="absolute -left-[9px] top-1 w-4 h-4 bg-gray-300 rounded-full"></div>
+                    <span class="font-bold text-brand-orange">06:30 WIB</span>
+                    <p class="font-bold">Tiba di Sentul</p>
+                    <p class="text-sm text-gray-500">Parkiran Wangun. Toilet & Briefing.</p>
+                </li>
+                <li class="pl-6 relative">
+                    <div class="absolute -left-[9px] top-1 w-4 h-4 bg-gray-300 rounded-full"></div>
+                    <span class="font-bold text-brand-orange">07:00 - 08:30 WIB</span>
+                    <p class="font-bold">The Climb</p>
+                    <p class="text-sm text-gray-500">Nanjak santai ke Warung Paniisan.</p>
+                </li>
+                <li class="pl-6 relative">
+                    <div class="absolute -left-[9px] top-1 w-4 h-4 bg-gray-300 rounded-full"></div>
+                    <span class="font-bold text-brand-orange">09:15 - 10:30 WIB</span>
+                    <p class="font-bold">River Trek (Turun)</p>
+                    <p class="text-sm text-gray-500">Main air & foto-foto di sungai.</p>
+                </li>
+                <li class="pl-6 relative">
+                    <div class="absolute -left-[9px] top-1 w-4 h-4 bg-gray-300 rounded-full"></div>
+                    <span class="font-bold text-brand-orange">11:00 WIB</span>
+                    <p class="font-bold">Makan Siang & Pulang</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Modal 2: Gear -->
+    <div id="modal-gear" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="closeModal(event, 'modal-gear')">
+        <div class="modal-content bg-white w-full max-w-md rounded-3xl p-8 relative shadow-2xl">
+            <button onclick="document.getElementById('modal-gear').classList.add('hidden')" class="absolute top-4 right-4 bg-gray-100 p-2 rounded-full hover:bg-gray-200">✕</button>
+            <h3 class="font-display text-4xl text-brand-dark mb-6">GEAR WAJIB</h3>
+            <div class="space-y-4">
+                <div class="bg-brand-sand/50 p-4 rounded-xl flex items-start gap-4">
+                    <div class="text-2xl">👟</div>
+                    <div>
+                        <p class="font-bold">Sepatu Lari</p>
+                        <p class="text-sm text-gray-600">Trail shoes disarankan. Road shoes boleh asal sol masih tebal.</p>
+                    </div>
+                </div>
+                <div class="bg-brand-sand/50 p-4 rounded-xl flex items-start gap-4">
+                    <div class="text-2xl">💧</div>
+                    <div>
+                        <p class="font-bold">Air Minum</p>
+                        <p class="text-sm text-gray-600">Min. 500ml (Handheld bottle atau tas lari).</p>
+                    </div>
+                </div>
+                <div class="bg-brand-sand/50 p-4 rounded-xl flex items-start gap-4">
+                    <div class="text-2xl">👕</div>
+                    <div>
+                        <p class="font-bold">Baju Ganti (PENTING!)</p>
+                        <p class="text-sm text-gray-600">Kita bakal basah-basahan di sungai. Bawa baju lengkap + handuk.</p>
+                    </div>
+                </div>
+                <div class="bg-brand-sand/50 p-4 rounded-xl flex items-start gap-4">
+                    <div class="text-2xl">💵</div>
+                    <div>
+                        <p class="font-bold">Uang Cash</p>
+                        <p class="text-sm text-gray-600">Buat jajan gorengan di warung atas (gak ada QRIS).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 3: Cost -->
+    <div id="modal-cost" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onclick="closeModal(event, 'modal-cost')">
+        <div class="modal-content bg-white w-full max-w-md rounded-3xl p-8 relative shadow-2xl">
+            <button onclick="document.getElementById('modal-cost').classList.add('hidden')" class="absolute top-4 right-4 bg-gray-100 p-2 rounded-full hover:bg-gray-200">✕</button>
+            <h3 class="font-display text-4xl text-brand-dark mb-2">ESTIMASI BIAYA</h3>
+            <p class="text-gray-500 mb-6 text-sm">Sistem kita "Share Cost" alias patungan. Transparan & Hemat.</p>
+            
+            <div class="bg-brand-orange/10 p-6 rounded-2xl text-center mb-6">
+                <p class="text-sm text-brand-dark uppercase font-bold tracking-widest">PER KEPALA</p>
+                <p class="text-5xl font-display text-brand-orange mt-2">Rp 75.000</p>
+                <p class="text-xs text-gray-500 mt-2">*Estimasi maksimal</p>
+            </div>
+
+            <ul class="text-sm text-gray-600 space-y-2">
+                <li class="flex justify-between border-b border-gray-100 pb-2">
+                    <span>Tiket Masuk Trekking</span>
+                    <span class="font-bold">Rp 25.000</span>
+                </li>
+                <li class="flex justify-between border-b border-gray-100 pb-2">
+                    <span>Parkir Mobil (Bagi Rata)</span>
+                    <span class="font-bold">Rp 5.000</span>
+                </li>
+                <li class="flex justify-between border-b border-gray-100 pb-2">
+                    <span>Tol & Bensin (Bagi Rata)</span>
+                    <span class="font-bold">Rp 35.000</span>
+                </li>
+                <li class="flex justify-between border-b border-gray-100 pb-2">
+                    <span>Guide Lokal/Kebersihan</span>
+                    <span class="font-bold">Rp 10.000</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Modal 4: Register (Simple Action) -->
+    <div id="modal-register" class="modal hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md" onclick="closeModal(event, 'modal-register')">
+        <div class="modal-content bg-white w-full max-w-sm rounded-3xl p-8 text-center shadow-2xl">
+            <button onclick="document.getElementById('modal-register').classList.add('hidden')" class="absolute top-4 right-4 bg-gray-100 p-2 rounded-full hover:bg-gray-200">✕</button>
+            <div class="text-6xl mb-4">👋</div>
+            <h3 class="font-display text-4xl text-brand-dark mb-4">GABUNG YUK!</h3>
+            <p class="text-gray-600 mb-8">Klik tombol di bawah buat langsung chat admin di WhatsApp dan amankan slot lo.</p>
+            <a href="#" class="block w-full bg-[#25D366] text-white font-bold py-4 rounded-xl hover:bg-[#128C7E] transition-colors mb-3">
+                CHAT VIA WHATSAPP
+            </a>
+            <p class="text-xs text-gray-400">Slot terbatas 15 orang.</p>
+        </div>
+    </div>
+
+    <!-- JS Logic -->
+    <script>
+        // =================================================================
+        // 👇👇👇 KONFIGURASI API KEY ADA DI SINI (JANGAN DITUKAR) 👇👇👇
+        // =================================================================
+        
+        // CARA ISI:
+        // 1. Dapatkan key di: https://aistudio.google.com/app/apikey
+        // 2. Paste key kamu di antara tanda kutip di baris bawah ini.
+        // 3. JANGAN LUPA: Restrict key di Google Cloud Console agar aman.
+        
+        const apiKey = "AIzaSyDLUl8lkFQioqnf0tD6Fr4Gunt7OIa3I4U"; // <--- 🔑 TEMPEL API KEY ANDA DI SINI (Contoh: "AIzaSy...")
+
+        // =================================================================
+        // 👆👆👆 KONFIGURASI SELESAI 👆👆👆
+        // =================================================================
+
+
+        // --- SCROLL & UI ANIMATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) entry.target.classList.add('active');
+                });
+            }, { threshold: 0.15 });
+
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        });
+
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function closeModal(event, id) {
+            if (event.target.id === id) {
+                document.getElementById(id).classList.add('hidden');
+            }
+        }
+
+        // --- GEMINI AI CHAT LOGIC ---
+        
+        let isChatOpen = false;
+        const chatWindow = document.getElementById('chat-window');
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+
+        function toggleChat() {
+            isChatOpen = !isChatOpen;
+            if (isChatOpen) {
+                chatWindow.classList.remove('closed');
+                userInput.focus();
+            } else {
+                chatWindow.classList.add('closed');
+            }
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        function appendMessage(text, sender) {
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', sender);
+            
+            // Basic Markdown Parsing using marked.js if available, else simple replacement
+            if (sender === 'bot' && typeof marked !== 'undefined') {
+                msgDiv.innerHTML = marked.parse(text);
+            } else {
+                msgDiv.textContent = text;
+            }
+            
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const id = 'typing-' + Date.now();
+            const msgDiv = document.createElement('div');
+            msgDiv.classList.add('message', 'bot');
+            msgDiv.id = id;
+            msgDiv.innerHTML = `
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>`;
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return id;
+        }
+
+        function removeTypingIndicator(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            // Cek apakah user sudah memasukkan API Key atau belum
+            if (!apiKey || apiKey === "") {
+                appendMessage("⚠️ Waduh, API Key belum diisi di konfigurasi. Edit file 'index.html' dan cari bagian 'KONFIGURASI API KEY' di atas!", 'bot');
+                return;
+            }
+
+            // 1. Add User Message
+            appendMessage(text, 'user');
+            userInput.value = '';
+
+            // 2. Show Loading
+            const typingId = showTypingIndicator();
+
+            try {
+                // 3. Call Gemini API
+                // Menggunakan model Gemini terbaru
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: text }]
+                        }],
+                        systemInstruction: {
+                            parts: [{
+                                text: `Kamu adalah "Coach PELANTUR AI", asisten virtual yang ramah, santuy (chill), dan gaul untuk komunitas trail run PELANTUR (Pelari Naik Turun). 
+                                Target audiens: Pemula, Gen Z, Milenial di Jakarta yang bosan lari di aspal.
+                                Bahasa: Indonesia gaul (Jaksel style dikit boleh), suportif, lucu, dan sedikit nyeleneh tapi informatif.
+                                
+                                Konteks Event:
+                                - Nama: Rookie Trail Series Vol. 1: Paniisan Loop.
+                                - Lokasi: Sentul (Wangun - Paniisan).
+                                - Jarak: +/- 7KM.
+                                - Medan: Tanah, hutan pinus, tanjakan santai, sungai (river crossing).
+                                - Biaya: Share cost 75k (patungan).
+                                - Prinsip: "Pelan Tapi Terukur", No Drop Policy (gak ada yang ditinggal).
+                                - Highlights: Makan gorengan di warung atas, main air di sungai.
+
+                                Tugasmu:
+                                1. Jawab pertanyaan soal gear (sepatu road boleh asal sol tebal, bawa air 500ml).
+                                2. Jawab soal fisik (jalan aja kalau capek, jangan maksa).
+                                3. Kalau diminta pantun, buatkan pantun lucu tema lari/alam/mantan.
+                                4. Semangati mereka yang ragu.
+                                5. Jawaban harus singkat, padat, dan formatnya rapi (pakai bullet points kalau perlu).`
+                            }]
+                        }
+                    })
+                });
+
+                const data = await response.json();
+                removeTypingIndicator(typingId);
+
+                if (data.error) {
+                    // Handle error quota atau restriction
+                    console.error(data.error);
+                    if (data.error.message.includes('API key not valid') || data.error.code === 403 || data.error.status === 'INVALID_ARGUMENT') {
+                         appendMessage("Waduh, API Key-nya salah atau belum diatur domain-nya. Cek lagi ya!", 'bot');
+                    } else {
+                         appendMessage("Koneksi lagi putus-nyambung nih. Coba tanya lagi ya!", 'bot');
+                    }
+                } else {
+                    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (reply) {
+                        appendMessage(reply, 'bot');
+                    } else {
+                        appendMessage("Maaf, Coach lagi bengong (no response). Coba tanya yang lain.", 'bot');
+                    }
+                }
+
+            } catch (error) {
+                removeTypingIndicator(typingId);
+                appendMessage("Yah, error sistem nih. Cek koneksi internetmu ya!", 'bot');
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
